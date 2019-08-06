@@ -1,6 +1,7 @@
 #include<linux/sched.h>
 #include<linux/pid.h>
 #include<linux/cred.h>
+#include<linux/sched/signal.h>
 
 #define DEFAULT_SUCCESS	1
 #define DEFAULT_FAILURE -1
@@ -50,4 +51,13 @@ static inline int print_task_parent_pid_details(struct task_struct *tsk) {
 	       );
 
 	return DEFAULT_SUCCESS;
+}
+
+/*
+ * Get number of threads in task group
+ */
+static inline int get_task_thread_count(struct task_struct *tsk) {
+
+	return tsk->signal->nr_threads;
+
 }

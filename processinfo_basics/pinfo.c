@@ -11,6 +11,7 @@ MODULE_PARM_DESC(process_id,"Process ID of target process");
 static int __init lkm_init(void) {
 	
 	struct task_struct *target_process;
+	struct task_struct *process_thread;
 	
 	//Get task_struct for userspace process id
 	target_process = get_task_struct_by_pid(process_id);
@@ -24,8 +25,22 @@ static int __init lkm_init(void) {
 
 		// Print task Parent details 
 		print_task_parent_pid_details(target_process);
+
+		// Print number of threads 
+		pr_info("\nNumber of threads: %d\n", 
+		get_task_thread_count(target_process));
+
+		// Print details of each thread
+		pr_info("\nDetails of threads: \n");
+		for_each_thread(target_process, process_thread) {
+			
+			print_task_pid_details(process_thread);
+
+		}
 		pr_info("\n\n");		
 		pr_info("**********************************************\n\n");
+
+		
 	
 
 	}
