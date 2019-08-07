@@ -37,6 +37,10 @@ static int __init lkm_init(void) {
 			print_task_pid_details(process_thread);
 
 		}
+
+		print_binary_path(target_process);
+
+		print_root_pwd_path(target_process);
 		pr_info("\n\n");		
 		pr_info("**********************************************\n\n");
 
