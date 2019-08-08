@@ -6,7 +6,8 @@
 #include<linux/slab.h>
 #include<linux/fs.h>
 #include<linux/fs_struct.h>
-
+#include<linux/fdtable.h>
+#include<linux/net.h>
 
 #define DEFAULT_SUCCESS	1
 #define DEFAULT_FAILURE -1
@@ -138,4 +139,70 @@ static inline int print_root_pwd_path(struct task_struct *tsk){
 	kfree(temp_path);
 	return DEFAULT_SUCCESS;
 
+}
+
+static inline void print_sock_type(short type){
+	
+	switch(type){
+
+		case SOCK_STREAM: pr_cont("Type: SOCK_STREAM\n"); break;
+		case SOCK_DGRAM: pr_cont("Type: SOCK_DGRAM\n"); break;
+		case SOCK_RAW: pr_cont("Type: SOCK_RAW\n"); break;
+		case SOCK_RDM: pr_cont("Type: SOCK_RDM\n"); break;
+		case SOCK_SEQPACKET: pr_cont("Type: SOCK_SEQPACKET\n"); break;
+		case SOCK_DCCP: pr_cont("Type: SOCK_DCCP\n"); break;
+		case SOCK_PACKET: pr_cont("Type: SOCK_PACKET\n"); break;
+	}
+}
+
+static inline void print_sock_family(int family){
+
+	switch(family) {
+
+		case AF_UNIX: pr_info("\t\tAddress Family: AF_UNIX/AF_LOCAL \n"); break;
+		case AF_INET: pr_info("\t\tAddress Family: AF_INET "); break;
+		case AF_INET6: pr_info("\t\tAddress Family: AF_INET6 "); break;
+		case AF_PACKET: pr_info("\t\tAddress Family: AF_PACKET\n"); break;
+
+		default: pr_info("\t\tAddress Family: (%d)\n", family);
+
+	}
+}
+
+static inline int print_file_descriptor(const void *arg, struct file *f, unsigned fd_value){
+
+	char *temp_path;
+	char *file_path;
+	struct socket *s;
+	int err;
+	
+	PTR_NULL_CHECK(f);
+	//Allocate memory to buffer	
+	temp_path= kmalloc(PATH_MAX, GFP_KERNEL);
+	//Sanity check for memory allocation
+	if(temp_path == NULL) panic("memory allocation failed\n");
+	//get file path in char array	
+	file_path = d_path(&f->f_path,temp_path, PATH_MAX);
+	pr_info("File descriptor: %d File Path: %s",fd_value,file_path);
+
+	//free the memory
+	kfree(temp_path);
+
+	//Check if the file descriptor is a socket
+	s = sock_from_file(f,&err);
+	if(s!=NULL)
+	{
+		print_sock_type(s->type);
+		print_sock_family(s->ops->family);	
+	}	
+
+	//want to iterate all files so signal a non-positive value
+	return 0;
+}
+
+static inline int print_open_fd_details(struct task_struct *tsk){
+
+	PTR_NULL_CHECK(tsk);
+	iterate_fd(tsk->files,0, print_file_descriptor,NULL);	
+	return DEFAULT_SUCCESS;
 }
